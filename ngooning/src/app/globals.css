@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 96%;
+    --foreground: 240 10% 3.9%;
+    --card: 240 10% 96%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 240 10% 96%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 240 10% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 1rem;
+    
+    /* Neumorphic variables */
+    --neu-base: #f0f0f3;
+    --neu-light: #ffffff;
+    --neu-dark: #d1d9e6;
+    --neu-shadow-light: rgba(255, 255, 255, 0.9);
+    --neu-shadow-dark: rgba(209, 217, 230, 0.6);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 240 10% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 240 10% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 240 10% 98%;
+    --primary: 240 10% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 240 10% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 240 10% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 240 10% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    
+    /* Dark mode neumorphic variables */
+    --neu-base: #2d3748;
+    --neu-light: #4a5568;
+    --neu-dark: #1a202c;
+    --neu-shadow-light: rgba(74, 85, 104, 0.4);
+    --neu-shadow-dark: rgba(26, 32, 44, 0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Neumorphic component classes */
+  .neu-flat {
+    @apply shadow-neu-flat dark:shadow-neu-dark-flat transition-all duration-200;
+    background: var(--neu-base);
+  }
+  
+  .neu-pressed {
+    @apply shadow-neu-pressed dark:shadow-neu-dark-pressed transition-all duration-200;
+    background: var(--neu-base);
+  }
+  
+  .neu-raised {
+    @apply shadow-neu-raised dark:shadow-neu-dark-raised transition-all duration-200;
+    background: var(--neu-base);
+  }
+  
+  .neu-subtle {
+    @apply shadow-neu-subtle dark:shadow-neu-dark-subtle transition-all duration-200;
+    background: var(--neu-base);
+  }
+  
+  .neu-button {
+    @apply neu-flat hover:neu-raised active:neu-pressed rounded-2xl px-6 py-3 font-medium;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .neu-card {
+    @apply neu-flat rounded-3xl p-6 backdrop-blur-sm;
+  }
+  
+  .neu-input {
+    @apply neu-pressed rounded-xl px-4 py-3 bg-transparent border-0 focus:outline-none;
+  }
+  
+  .neu-toggle {
+    @apply neu-flat rounded-full p-2 cursor-pointer hover:neu-raised active:neu-pressed;
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-md bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20;
+  }
+  
+  .floating-element {
+    @apply animate-float;
+  }
+  
+  .soft-glow {
+    @apply shadow-lg shadow-primary/20 dark:shadow-primary/10;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* iOS-like focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+}
+
+/* Apple-style typography */
+.text-hero {
+  @apply text-4xl md:text-6xl font-bold tracking-tight;
+}
+
+.text-title {
+  @apply text-2xl md:text-3xl font-semibold tracking-tight;
+}
+
+.text-subtitle {
+  @apply text-lg md:text-xl font-medium text-muted-foreground;
+}
+
+.text-body {
+  @apply text-base leading-relaxed;
+}
+
+.text-caption {
+  @apply text-sm text-muted-foreground;
+}
