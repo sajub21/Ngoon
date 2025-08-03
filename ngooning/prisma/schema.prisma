@@ -1,0 +1,342 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  phone             String?  @unique
+  username          String?  @unique
+  fullName          String?
+  avatar            String?
+  bio               String?
+  dateOfBirth       DateTime?
+  isVerified        Boolean  @default(false)
+  isAnonymous       Boolean  @default(false)
+  subscriptionType  SubscriptionType @default(FREE)
+  subscriptionEndsAt DateTime?
+  
+  // Recovery tracking
+  recoveryStartDate DateTime?
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  
+  // Preferences
+  timezone          String   @default("UTC")
+  language          String   @default("en")
+  notifications     Json     @default("{}")
+  privacy           Json     @default("{}")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastLoginAt       DateTime?
+  
+  // Relations
+  sessions          Session[]
+  goals             Goal[]
+  habits            Habit[]
+  events            Event[]
+  groupMemberships  GroupMembership[]
+  sentMessages      Message[] @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
+  aiLogs            AiLog[]
+  calendarSyncs     CalendarSync[]
+  files             File[]
+  
+  @@map("users")
+}
+
+model Session {
+  id                String   @id @default(cuid())
+  userId            String
+  token             String   @unique
+  expiresAt         DateTime
+  ipAddress         String?
+  userAgent         String?
+  createdAt         DateTime @default(now())
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Group {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  avatar          String?
+  type            GroupType @default(RECOVERY)
+  isPrivate       Boolean  @default(false)
+  maxMembers      Int      @default(50)
+  location        String?
+  coordinates     Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  memberships     GroupMembership[]
+  events          Event[]
+  messages        Message[]
+  
+  @@map("groups")
+}
+
+model GroupMembership {
+  id              String   @id @default(cuid())
+  userId          String
+  groupId         String
+  role            GroupRole @default(MEMBER)
+  joinedAt        DateTime @default(now())
+  isActive        Boolean  @default(true)
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, groupId])
+  @@map("group_memberships")
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  type            EventType @default(SOCIAL)
+  startTime       DateTime
+  endTime         DateTime?
+  location        String?
+  coordinates     Json?
+  isOnline        Boolean  @default(false)
+  maxAttendees    Int?
+  
+  // Trip planning
+  estimatedCost   Float?
+  bookingLinks    Json?
+  
+  createdById     String
+  groupId         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  createdBy       User     @relation(fields: [createdById], references: [id])
+  group           Group?   @relation(fields: [groupId], references: [id])
+  
+  @@map("events")
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  content         String
+  type            MessageType @default(TEXT)
+  metadata        Json?
+  
+  senderId        String
+  recipientId     String?
+  groupId         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  readAt          DateTime?
+  
+  // Relations
+  sender          User     @relation("SentMessages", fields: [senderId], references: [id])
+  recipient       User?    @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  group           Group?   @relation(fields: [groupId], references: [id])
+  
+  @@map("messages")
+}
+
+model Goal {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  type            GoalType @default(RECOVERY)
+  targetValue     Int?
+  currentValue    Int      @default(0)
+  unit            String?
+  targetDate      DateTime?
+  isCompleted     Boolean  @default(false)
+  completedAt     DateTime?
+  
+  userId          String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("goals")
+}
+
+model Habit {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  frequency       HabitFrequency @default(DAILY)
+  targetCount     Int      @default(1)
+  color           String   @default("#6366f1")
+  icon            String?
+  isActive        Boolean  @default(true)
+  
+  userId          String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs            HabitLog[]
+  
+  @@map("habits")
+}
+
+model HabitLog {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  count           Int      @default(1)
+  notes           String?
+  
+  habitId         String
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  habit           Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  
+  @@unique([habitId, date])
+  @@map("habit_logs")
+}
+
+model AiLog {
+  id              String   @id @default(cuid())
+  type            AiLogType @default(CHAT)
+  prompt          String
+  response        String
+  metadata        Json?
+  tokensUsed      Int?
+  cost            Float?
+  
+  userId          String
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("ai_logs")
+}
+
+model CalendarSync {
+  id              String   @id @default(cuid())
+  provider        CalendarProvider
+  externalId      String
+  accessToken     String
+  refreshToken    String?
+  isActive        Boolean  @default(true)
+  
+  userId          String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastSyncAt      DateTime?
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, provider])
+  @@map("calendar_syncs")
+}
+
+model File {
+  id              String   @id @default(cuid())
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int
+  url             String
+  thumbnail       String?
+  
+  userId          String
+  
+  createdAt       DateTime @default(now())
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("files")
+}
+
+// Enums
+enum SubscriptionType {
+  FREE
+  PREMIUM
+}
+
+enum GroupType {
+  RECOVERY
+  SOCIAL
+  ACTIVITY
+  TRAVEL
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum EventType {
+  SOCIAL
+  RECOVERY
+  ACTIVITY
+  TRIP
+  MEETUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  SYSTEM
+}
+
+enum GoalType {
+  RECOVERY
+  FITNESS
+  SOCIAL
+  CAREER
+  PERSONAL
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum AiLogType {
+  CHAT
+  PLANNING
+  ADVICE
+  GOAL_SETTING
+}
+
+enum CalendarProvider {
+  GOOGLE
+  APPLE
+  OUTLOOK
+}
